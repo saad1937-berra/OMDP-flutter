@@ -1,0 +1,49 @@
+name: omdb_app
+description: "Une application Flutter pour rechercher et gérer des films/séries via l'API OMDb."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # HTTP requests
+  http: ^1.1.0
+  
+  # JSON serialization
+  json_annotation: ^4.8.0
+  
+  # SQLite database
+  sqflite: ^2.3.0
+  path: ^1.8.3
+  
+  # URL launcher for IMDB links
+  url_launcher: ^6.2.0
+  
+  # State management (optional but useful)
+  provider: ^6.1.0
+
+  # Géolocalisation et permissions
+  geolocator: ^10.1.0
+  permission_handler: ^12.0.1
+  
+  # MAPS - Flutter Map 
+  flutter_map: ^6.1.0
+  latlong2: ^0.9.1
+
+  flutter_overpass: ^1.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^3.0.0
+  json_serializable: ^6.7.0
+  build_runner: ^2.4.0
+
+flutter:
+  uses-material-design: true
