@@ -14,30 +14,22 @@ class CinemaService {
 
   CinemaService._internal();
 
-  /// Récupère les cinémas proches via Overpass API (OpenStreetMap) - GRATUIT!
+  /// Récupère les cinémas proches via Overpass API (OpenStreetMap)
   Future<List<Cinema>> getNearbyCinemas({
     required LocationCoordinates userLocation,
     double radiusKm = 10.0,
   }) async {
     try {
-      print('🎬 Recherche de cinémas réels via Overpass API...');
-
       final cinemas = await _fetchCinemasFromOverpass(
         userLocation,
         radiusKm,
       );
 
-      if (cinemas.isNotEmpty) {
-        print('✅ ${cinemas.length} cinémas trouvés via Overpass!');
-        return cinemas;
-      }
-
-      // Fallback si pas de résultats
-      print('⚠️ Overpass API ne retourne rien, utilisation données fictives');
-      return _getDemoCinemasFallback(userLocation, radiusKm);
+      // Retourner les cinémas réels (peuvent être vides si API échoue)
+      return cinemas;
     } catch (e) {
-      print('❌ Erreur Overpass: $e');
-      return _getDemoCinemasFallback(userLocation, radiusKm);
+      // ✅ Retourner liste vide au lieu du fallback
+      return [];
     }
   }
 
@@ -47,7 +39,6 @@ class CinemaService {
     double radiusKm,
   ) async {
     try {
-      // ✅ Requête Overpass simplifiée
       final query = '''[out:json];
 (
   node["amenity"="cinema"](around:${(radiusKm * 1000).toInt()},${userLocation.latitude},${userLocation.longitude});
@@ -56,11 +47,7 @@ class CinemaService {
 );
 out center;''';
 
-      final url = 'https://overpass-api.de/api/interpreter';
-
-      print('📡 Appel Overpass API...');
-      print('Position: ${userLocation.latitude}, ${userLocation.longitude}');
-      print('Rayon: $radiusKm km');
+      const url = 'https://overpass-api.de/api/interpreter';
 
       final response = await http.post(
         Uri.parse(url),
@@ -68,50 +55,39 @@ out center;''';
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
           'Accept': 'application/json',
-          'User-Agent':
-              'OMDb-App/1.0 (Flutter)', // ✅ AJOUT: User-Agent important
+          'User-Agent': 'OMDb-App/1.0 (Flutter)',
         },
       ).timeout(
         const Duration(seconds: 20),
-        onTimeout: () => throw Exception('Timeout Overpass (20s)'),
+        onTimeout: () => throw Exception('Timeout Overpass'),
       );
-
-      print('📡 Réponse Overpass: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
 
         if (json['elements'] == null) {
-          print('⚠️ Pas de champ "elements" dans la réponse');
           return [];
         }
 
         final elements = json['elements'] as List<dynamic>;
-        print('📊 ${elements.length} éléments reçus');
-
         final cinemas = <Cinema>[];
+
         for (final element in elements) {
           try {
             final cinema = _parseOverpassCinema(element, userLocation);
             if (cinema != null) {
               cinemas.add(cinema);
-              print(
-                  '✅ ${cinema.name} à ${cinema.distance!.toStringAsFixed(1)}km');
             }
           } catch (e) {
-            print('⚠️ Erreur parsing: $e');
             continue;
           }
         }
 
-        print('🎬 Total: ${cinemas.length} cinémas trouvés!');
         return cinemas;
       } else {
-        print('❌ Erreur ${response.statusCode}');
         throw Exception('Overpass error: ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ Erreur _fetchCinemasFromOverpass: $e');
       rethrow;
     }
   }
@@ -125,7 +101,6 @@ out center;''';
       double lat = 0.0;
       double lng = 0.0;
 
-      // Récupérer les coordonnées
       if (element.containsKey('lat') && element.containsKey('lon')) {
         lat = (element['lat'] as num).toDouble();
         lng = (element['lon'] as num).toDouble();
@@ -187,50 +162,14 @@ out center;''';
     return tags['addr:full'] as String? ?? 'Adresse inconnue';
   }
 
-  /// Données fictives de secours
-  List<Cinema> _getDemoCinemasFallback(
-    LocationCoordinates userLocation,
-    double radiusKm,
-  ) {
-    final allCinemas = Cinema.getDemoCinemas();
-
-    final cinemasWithDistance = allCinemas.map((cinema) {
-      final distance = _calculateDistance(
-        userLocation.latitude,
-        userLocation.longitude,
-        cinema.latitude,
-        cinema.longitude,
-      );
-
-      return Cinema(
-        id: cinema.id,
-        name: cinema.name,
-        address: cinema.address,
-        latitude: cinema.latitude,
-        longitude: cinema.longitude,
-        phone: cinema.phone,
-        website: cinema.website,
-        distance: distance,
-      );
-    }).toList();
-
-    final nearCinemas = cinemasWithDistance
-        .where((cinema) => cinema.distance! <= radiusKm)
-        .toList();
-
-    nearCinemas.sort((a, b) => a.distance!.compareTo(b.distance!));
-
-    return nearCinemas;
-  }
-
-  /// Calcule la distance entre deux points
+  /// Calcule la distance entre deux points (formule Haversine)
   double _calculateDistance(
     double lat1,
     double lon1,
     double lat2,
     double lon2,
   ) {
-    const R = 6371;
+    const R = 6371; // Rayon de la terre en km
     final dLat = _toRad(lat2 - lat1);
     final dLon = _toRad(lon2 - lon1);
 
@@ -244,6 +183,7 @@ out center;''';
     return R * c;
   }
 
+  /// Convertit les degrés en radians
   double _toRad(double degree) {
     return degree * math.pi / 180;
   }
