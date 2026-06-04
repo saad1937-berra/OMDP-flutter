@@ -9,10 +9,10 @@ class HomeScreen extends StatefulWidget {
   final bool isDarkMode;
 
   const HomeScreen({
-    Key? key,
+    super.key,
     required this.onThemeToggle,
     required this.isDarkMode,
-  }) : super(key: key);
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -28,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen>
   List<Movie> _filteredMovies = [];
 
   /// Historique de recherche (stocké en mémoire)
-  List<String> _searchHistory = [];
+  final List<String> _searchHistory = [];
 
   String _selectedSort = 'year-desc';
 

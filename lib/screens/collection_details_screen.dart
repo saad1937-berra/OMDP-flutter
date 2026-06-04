@@ -8,9 +8,9 @@ class CollectionDetailsScreen extends StatefulWidget {
   final MovieCollection collection;
 
   const CollectionDetailsScreen({
-    Key? key,
+    super.key,
     required this.collection,
-  }) : super(key: key);
+  });
 
   @override
   State<CollectionDetailsScreen> createState() =>

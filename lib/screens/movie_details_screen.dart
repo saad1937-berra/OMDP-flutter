@@ -7,7 +7,7 @@ import '../services/database_service.dart';
 class MovieDetailsScreen extends StatefulWidget {
   final String imdbId;
 
-  const MovieDetailsScreen({Key? key, required this.imdbId}) : super(key: key);
+  const MovieDetailsScreen({super.key, required this.imdbId});
 
   @override
   State<MovieDetailsScreen> createState() => _MovieDetailsScreenState();
@@ -442,7 +442,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        Text('Ma note:'),
+                                        const Text('Ma note:'),
                                         const SizedBox(height: 8),
                                         Row(
                                           children: [

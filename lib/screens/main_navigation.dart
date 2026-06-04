@@ -10,10 +10,10 @@ class MainNavigationScreen extends StatefulWidget {
   final bool isDarkMode;
 
   const MainNavigationScreen({
-    Key? key,
+    super.key,
     required this.onThemeToggle,
     required this.isDarkMode,
-  }) : super(key: key);
+  });
 
   @override
   State<MainNavigationScreen> createState() => _MainNavigationScreenState();
