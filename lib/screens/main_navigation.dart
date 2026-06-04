@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
+import 'movie_details_screen.dart';
 import 'favorites_screen.dart';
 import 'map_screen.dart';
+import 'collections_screen.dart';
 
-/// Écran principal avec navigation par onglets
 class MainNavigationScreen extends StatefulWidget {
-  const MainNavigationScreen({super.key});
+  final VoidCallback onThemeToggle;
+  final bool isDarkMode;
+
+  const MainNavigationScreen({
+    Key? key,
+    required this.onThemeToggle,
+    required this.isDarkMode,
+  }) : super(key: key);
 
   @override
   State<MainNavigationScreen> createState() => _MainNavigationScreenState();
@@ -14,18 +22,28 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const FavoritesScreen(),
-    const MapScreen(), // 🗺️ NOUVEAU: Écran de la carte
-  ];
-
   @override
   Widget build(BuildContext context) {
+    /// Les screens sont créées ici dans le build
+    final screens = [
+      HomeScreen(
+        onThemeToggle: widget.onThemeToggle,
+        isDarkMode: widget.isDarkMode,
+      ),
+      const FavoritesScreen(),
+      const CollectionsScreen(),
+      const MapScreen(),
+    ];
+
     return Scaffold(
-      body: _screens[_selectedIndex],
+      body: screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: const Color(0xFF00209F),
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.white70,
+        elevation: 8,
         onTap: (index) {
           setState(() {
             _selectedIndex = index;
@@ -41,8 +59,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             label: 'Favoris',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.map),
-            label: 'Cinémas', // 🗺️ NOUVEAU
+            icon: Icon(Icons.folder),
+            label: 'Collections',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.location_on),
+            label: 'Cinémas',
           ),
         ],
       ),
