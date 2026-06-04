@@ -147,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen>
               controller: _searchController,
               onChanged: _searchMovies,
               decoration: InputDecoration(
-                hintText: 'Chercher un film, serie ou acteur...',
+                hintText: 'Chercher un film ou une serie',
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(

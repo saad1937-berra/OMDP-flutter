@@ -8,9 +8,9 @@ class CollectionDetailsScreen extends StatefulWidget {
   final MovieCollection collection;
 
   const CollectionDetailsScreen({
-    super.key,
+    Key? key,
     required this.collection,
-  });
+  }) : super(key: key);
 
   @override
   State<CollectionDetailsScreen> createState() =>
@@ -59,7 +59,6 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
       setState(() {
         _isLoading = false;
       });
-      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Erreur lors du chargement')),
       );
@@ -81,7 +80,6 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
         _searchResults = results;
       });
     } catch (e) {
-      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Erreur de recherche')),
       );
@@ -132,12 +130,10 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
 
       _loadCollectionMovies();
 
-      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${movie.title} ajouté à la collection!')),
       );
     } catch (e) {
-      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Erreur lors de l\'ajout')),
       );
@@ -166,12 +162,10 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
 
       _loadCollectionMovies();
 
-      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Film retiré de la collection')),
       );
     } catch (e) {
-      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Erreur lors du retrait')),
       );
@@ -257,7 +251,6 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
                 /// Info collection
                 Container(
                   padding: const EdgeInsets.all(16.0),
-                  // ignore: deprecated_member_use
                   color: const Color(0xFF00209F).withOpacity(0.1),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -314,33 +307,72 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
                             return Card(
                               margin: const EdgeInsets.only(bottom: 12.0),
                               child: ListTile(
-                                leading: SizedBox(
-                                  width: 40,
-                                  child: movie.poster != 'N/A'
-                                      ? Image.network(
-                                          movie.poster,
-                                          fit: BoxFit.cover,
-                                          errorBuilder:
-                                              (context, error, stackTrace) {
-                                            return Container(
-                                              color: Colors.grey.shade300,
-                                              child: const Icon(
-                                                  Icons.image_not_supported),
-                                            );
-                                          },
-                                        )
-                                      : Container(
-                                          color: Colors.grey.shade300,
-                                          child: const Icon(
-                                              Icons.image_not_supported),
+                                leading: GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            MovieDetailsScreen(
+                                          imdbId: movie.imdbId,
                                         ),
+                                      ),
+                                    );
+                                  },
+                                  child: SizedBox(
+                                    width: 40,
+                                    child: movie.poster != 'N/A'
+                                        ? Image.network(
+                                            movie.poster,
+                                            fit: BoxFit.cover,
+                                            errorBuilder:
+                                                (context, error, stackTrace) {
+                                              return Container(
+                                                color: Colors.grey.shade300,
+                                                child: const Icon(
+                                                    Icons.image_not_supported),
+                                              );
+                                            },
+                                          )
+                                        : Container(
+                                            color: Colors.grey.shade300,
+                                            child: const Icon(
+                                                Icons.image_not_supported),
+                                          ),
+                                  ),
                                 ),
-                                title: Text(movie.title),
-                                subtitle: Text(movie.year),
+                                title: GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            MovieDetailsScreen(
+                                          imdbId: movie.imdbId,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Text(movie.title),
+                                ),
+                                subtitle: GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            MovieDetailsScreen(
+                                          imdbId: movie.imdbId,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Text(movie.year),
+                                ),
                                 trailing: PopupMenuButton(
                                   itemBuilder: (context) => [
                                     PopupMenuItem(
-                                      child: const Text('Voir'),
+                                      child: const Text('Voir les détails'),
                                       onTap: () {
                                         Navigator.push(
                                           context,
