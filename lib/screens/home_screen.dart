@@ -22,10 +22,17 @@ class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   final ApiService _apiService = ApiService();
+  final ScrollController _scrollController = ScrollController();
 
   late Future<List<Movie>> _moviesFuture;
   List<Movie> _allMovies = [];
   List<Movie> _filteredMovies = [];
+
+  /// Pagination
+  int _currentPage = 1;
+  bool _isLoadingMore = false;
+  bool _hasMorePages = true;
+  String _currentQuery = 'movie';
 
   /// Historique de recherche (stocké en mémoire)
   final List<String> _searchHistory = [];
@@ -42,7 +49,14 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
-    _moviesFuture = _apiService.searchMovies(query: 'movie');
+    _scrollController.addListener(_onScroll);
+    _moviesFuture = _apiService.searchMovies(query: _currentQuery, page: 1);
+    _moviesFuture.then((movies) {
+      setState(() {
+        _allMovies = movies;
+        _applyFiltersAndSort();
+      });
+    });
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
@@ -52,8 +66,41 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     _animationController.dispose();
     super.dispose();
+  }
+
+  /// Détecte quand on approche du bas de la liste
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent * 0.8) {
+      _loadMoreMovies();
+    }
+  }
+
+  /// Charge la page suivante
+  Future<void> _loadMoreMovies() async {
+    if (_isLoadingMore || !_hasMorePages) return;
+
+    setState(() => _isLoadingMore = true);
+
+    try {
+      final newMovies = await _apiService.searchMovies(
+        query: _currentQuery,
+        page: _currentPage + 1,
+      );
+
+      setState(() {
+        _currentPage++;
+        _allMovies.addAll(newMovies);
+        _applyFiltersAndSort();
+        _hasMorePages = newMovies.length == 10;
+        _isLoadingMore = false;
+      });
+    } catch (e) {
+      setState(() => _isLoadingMore = false);
+    }
   }
 
   /// Ajoute une recherche à l'historique
@@ -73,26 +120,37 @@ class _HomeScreenState extends State<HomeScreen>
     if (query.isEmpty) {
       setState(() {
         _filteredMovies = [];
+        _currentQuery = '';
+        _currentPage = 1;
+        _hasMorePages = true;
+        _allMovies = [];
       });
       return;
     }
 
     _addToHistory(query);
-    _moviesFuture = _apiService.searchMovies(query: query);
+    _currentQuery = query;
+    _currentPage = 1;
+    _hasMorePages = true;
+    _allMovies = [];
+
+    _moviesFuture = _apiService.searchMovies(query: query, page: 1);
     _moviesFuture.then((movies) {
       setState(() {
         _allMovies = movies;
+        _hasMorePages = movies.length == 10;
         _applyFiltersAndSort();
       });
     }).catchError((error) {
       setState(() {
         _filteredMovies = [];
+        _hasMorePages = false;
       });
     });
   }
 
   void _applyFiltersAndSort() {
-    _filteredMovies = _allMovies;
+    _filteredMovies = List.from(_allMovies);
 
     /// Filtre par année
     _filteredMovies = _filteredMovies.where((movie) {
@@ -294,11 +352,12 @@ class _HomeScreenState extends State<HomeScreen>
             child: FutureBuilder<List<Movie>>(
               future: _moviesFuture,
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+                if (snapshot.connectionState == ConnectionState.waiting &&
+                    _allMovies.isEmpty) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                if (snapshot.hasError) {
+                if (snapshot.hasError && _allMovies.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -353,8 +412,19 @@ class _HomeScreenState extends State<HomeScreen>
                   opacity: Tween<double>(begin: 0, end: 1)
                       .animate(_animationController),
                   child: ListView.builder(
-                    itemCount: _filteredMovies.length,
+                    controller: _scrollController,
+                    itemCount:
+                        _filteredMovies.length + (_isLoadingMore ? 1 : 0),
                     itemBuilder: (context, index) {
+                      if (index == _filteredMovies.length) {
+                        return const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      }
+
                       final movie = _filteredMovies[index];
                       return MovieListItem(
                         movie: movie,
